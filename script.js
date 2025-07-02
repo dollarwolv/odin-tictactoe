@@ -4,15 +4,45 @@ function createGameboard () {
                      [0, 0, 0]]
 
     const updateBoard = (rowidx, colidx, player) => {
-        if (player === 0){
+        if (gameArray[rowidx][colidx] === 0){
+            if (player === 0){
             gameArray[rowidx][colidx] = 5;
-        } else if (player === 1){
-            gameArray[rowidx][colidx] = 7;
+            } else if (player === 1){
+                gameArray[rowidx][colidx] = 7;
+            }
+            return true;
+        } else {
+            return false;
         }
+        
         console.log("new array" + gameArray);
     }
 
-    return {gameArray, updateBoard}
+    const determineWin = () => {
+        let rowSums = [0, 0, 0];
+        let colSums = [0, 0, 0];
+        let diagSums = [0, 0];
+
+        for (let i = 0; i < 3; i++) {
+            for (let j = 0; j < 3; j++) {
+                const val = gameArray[i][j];
+                rowSums[i] += val;
+                colSums[j] += val;
+
+                if (i === j) diagSums[0] += val;
+                if (i + j === 2) diagSums[1] += val;
+            }
+        }
+
+        const allSums = [...rowSums, ...colSums, ...diagSums];
+
+        if (allSums.includes(15)) return 0;
+        if (allSums.includes(21)) return 1;
+        if (!gameArray.flat().includes(0)) return 2; // draw
+        return null;
+    };
+
+    return {gameArray, updateBoard, determineWin}
 }
 
 function createPlayer (name, id) {
@@ -25,97 +55,74 @@ function createPlayer (name, id) {
     return {playerName, playerID, increaseScore}
 }
 
-function determineWin(gameArray) {
-        let rowOneSum = 0;
-        let rowTwoSum = 0;
-        let rowThreeSum = 0;
-        let colOneSum = 0;
-        let colTwoSum = 0;
-        let colThreeSum = 0;
+function manageGame() {
 
-        //diag one is the one that goes from top left to bottom right.
-        let diagOneSum = 0;
-        let diagTwoSum = 0;
+    let winner = null
+    const gameboard = createGameboard();
+    let playerOne = createPlayer("playerOne", 0);
+    let playerTwo = createPlayer("playerTwo", 0);
+    let moveNum = 0;
+
+    const handleTurn = (row, col, e) => {
+        let whoseTurn = moveNum % 2;
+        if (gameboard.updateBoard(row, col, whoseTurn)){
+
+            //update symbol
+            const playerSymbol = whoseTurn === 0 ? "X" : "O";
+            e.textContent = playerSymbol;
+        } else {
+            return;
+        }
+
+        moveNum++;
+
+        // determine winner
+        winner = gameboard.determineWin();
+        if(winner == 0){
+            alert("player 1 wins!")
+        } else if(winner == 1){
+            alert("player 2 wins!")
+        } else if(winner == 2){
+            alert("draw")
+        }
+    }
+
+    const renderGame = () => {
+        const grid = document.createElement("div");
+
+        Object.assign(grid.style, {
+            display: "grid",
+            gridTemplateRows: "repeat(3, 100px)",
+            gridTemplateColumns: "repeat(3, 100px)",
+            gap: "10px",
+            width: "330px",
+            height: "330px",
+            backgroundColor: "#f0f0f0"
+        });
+
+        document.body.appendChild(grid);
 
         for(let i=0; i<3; i++){
             for(let j=0; j<3; j++){
-                
-                switch (i) {
-                    case 0:
-                        rowOneSum += gameArray[i][j];
-                        break;
-                    case 1:
-                        rowTwoSum += gameArray[i][j];
-                        break;
-                    case 2:
-                        rowThreeSum += gameArray[i][j];
-                        break;
-                }
+                box = document.createElement("div");
+                box.style.border = "1px solid black"
+                box.dataset.row = i;
+                box.dataset.col = j;
 
-                switch (j) {
-                    case 0:
-                        colOneSum += gameArray[i][j];
-                        break;
-                    case 1:
-                        colTwoSum += gameArray[i][j];
-                        break;
-                    case 2:
-                        colThreeSum+= gameArray[i][j];
-                        break;
-                }
+                box.addEventListener("click", (e) => {
+                    const row = e.target.dataset.row;
+                    const col = e.target.dataset.col;
+                    handleTurn(row, col, e.target);
+                });
 
-                if(i == j){
-                    diagOneSum += gameArray[i][j];
-                }
-
-                if(j + i == 2){
-                    diagTwoSum += gameArray[i][j];
-                }
-        
+                grid.appendChild(box);
             }
         }
-
-        let sumArray = [rowOneSum, rowTwoSum, rowThreeSum, colOneSum, colTwoSum, colThreeSum, diagOneSum, diagTwoSum]
-
-        if (sumArray.includes(15)){
-            console.log("player 1 wins!");
-            return 0
-        } else if (sumArray.includes(21)){
-            console.log("player 2 wins!");
-            return 1
-        } else {
-            return null
-        }
-
-        
     }
 
-function playGame() {
+    renderGame();
 
-    let winner = null
-    gameboard = createGameboard();
-    playerOne = createPlayer("playerOne", 0)
-    playerTwo = createPlayer("playerTwo", 0)
-
-    let moveNum = 0;
-
-    while (winner === null) {
-        let whoseTurn = moveNum % 2;
-        row = prompt("What row do you want to play in?");
-        col = prompt("What column do you want to play in?");
-
-        gameboard.updateBoard(row, col, whoseTurn);
-        winner = determineWin(gameboard.gameArray);
-
-        if(winner != null){
-            console.log("winner is" + winner)
-        } else {
-            moveNum++;
-        }
-
-    }
-
-    
+    return {};
 }
 
-playGame()
+manageGame();
