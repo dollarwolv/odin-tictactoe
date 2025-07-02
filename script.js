@@ -69,7 +69,7 @@ function manageGame() {
     let playerTwo;
 
     const getForm = () => {
-        form = document.getElementById("form")
+        const form = document.getElementById("form")
         form.addEventListener("submit", (event) => {
             event.preventDefault();
 
@@ -132,24 +132,27 @@ function manageGame() {
         }
 
         moveNum++;
+        determineWinner();
+    }
+
+    const determineWinner = () => {
 
         // determine winner
-        winner = gameboard.determineWin();
+        let winner = gameboard.determineWin();
         if (winner != null) {
             const resultsDisplay = document.createElement("p");
             if(winner == 0){
-                winPlayer = playerOne;
+                let winPlayer = playerOne;
                 resultsDisplay.textContent = `${playerOne.playerName} wins yay`
-                playerOne.increaseScore();
             } else if(winner == 1){
-                winPlayer = playerTwo;
+                let winPlayer = playerTwo;
                 resultsDisplay.textContent = `${playerTwo.playerName} wins yay`
-                playerTwo.increaseScore();
             } else if(winner == 2){
                 resultsDisplay.textContent = "draw wop wop"
             }
             document.body.appendChild(resultsDisplay);
             
+            // play again button
             playAgain = document.createElement("button");
             playAgain.textContent = "play again!!!!!"
             document.body.appendChild(playAgain)
@@ -163,13 +166,12 @@ function manageGame() {
                 renderGame();
                 winPlayer.increaseScore();
             })
-            
-            
         }
-        
     }
     getForm();
     return {};
 }
+    
+
 
 manageGame();
