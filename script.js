@@ -14,8 +14,12 @@ function createGameboard () {
         } else {
             return false;
         }
-        
-        console.log("new array" + gameArray);
+    }
+
+    const resetArray = () => {
+        gameArray = [[0, 0, 0],
+                     [0, 0, 0],
+                     [0, 0, 0]]
     }
 
     const determineWin = () => {
@@ -42,7 +46,7 @@ function createGameboard () {
         return null;
     };
 
-    return {gameArray, updateBoard, determineWin}
+    return {gameArray, updateBoard, determineWin, resetArray}
 }
 
 function createPlayer (name, id) {
@@ -59,9 +63,62 @@ function manageGame() {
 
     let winner = null
     const gameboard = createGameboard();
-    let playerOne = createPlayer("playerOne", 0);
-    let playerTwo = createPlayer("playerTwo", 0);
     let moveNum = 0;
+
+    let playerOne;
+    let playerTwo;
+
+    const getForm = () => {
+        form = document.getElementById("form")
+        form.addEventListener("submit", (event) => {
+            event.preventDefault();
+
+            // make players
+            const playerOneName = document.getElementById("playerone").value.trim();
+            const playerTwoName = document.getElementById("playertwo").value.trim();
+            playerOne = createPlayer(playerOneName, 0)
+            playerTwo = createPlayer(playerTwoName, 1)
+            renderGame();
+
+        })
+        return form;
+    }
+
+    const renderGame = () => {
+
+        // create grid
+        const grid = document.createElement("div");
+        grid.id = "grid"
+        Object.assign(grid.style, {
+            display: "grid",
+            gridTemplateRows: "repeat(3, 100px)",
+            gridTemplateColumns: "repeat(3, 100px)",
+            gap: "10px",
+            width: "330px",
+            height: "330px",
+            backgroundColor: "#f0f0f0"
+        });
+        document.body.appendChild(grid);
+
+        // append boxes
+        for(let i=0; i<3; i++){
+            for(let j=0; j<3; j++){
+                let box = document.createElement("div");
+                box.style.border = "1px solid black"
+                box.dataset.row = i;
+                box.dataset.col = j;
+
+                box.addEventListener("click", (e) => {
+                    const row = e.target.dataset.row;
+                    const col = e.target.dataset.col;
+                    handleTurn(row, col, e.target);
+                });
+
+                grid.appendChild(box);
+            }
+        }
+        document.body.removeChild(getForm())
+    }
 
     const handleTurn = (row, col, e) => {
         let whoseTurn = moveNum % 2;
@@ -78,50 +135,40 @@ function manageGame() {
 
         // determine winner
         winner = gameboard.determineWin();
-        if(winner == 0){
-            alert("player 1 wins!")
-        } else if(winner == 1){
-            alert("player 2 wins!")
-        } else if(winner == 2){
-            alert("draw")
-        }
-    }
-
-    const renderGame = () => {
-        const grid = document.createElement("div");
-
-        Object.assign(grid.style, {
-            display: "grid",
-            gridTemplateRows: "repeat(3, 100px)",
-            gridTemplateColumns: "repeat(3, 100px)",
-            gap: "10px",
-            width: "330px",
-            height: "330px",
-            backgroundColor: "#f0f0f0"
-        });
-
-        document.body.appendChild(grid);
-
-        for(let i=0; i<3; i++){
-            for(let j=0; j<3; j++){
-                box = document.createElement("div");
-                box.style.border = "1px solid black"
-                box.dataset.row = i;
-                box.dataset.col = j;
-
-                box.addEventListener("click", (e) => {
-                    const row = e.target.dataset.row;
-                    const col = e.target.dataset.col;
-                    handleTurn(row, col, e.target);
-                });
-
-                grid.appendChild(box);
+        if (winner != null) {
+            const resultsDisplay = document.createElement("p");
+            if(winner == 0){
+                winPlayer = playerOne;
+                resultsDisplay.textContent = `${playerOne.playerName} wins yay`
+                playerOne.increaseScore();
+            } else if(winner == 1){
+                winPlayer = playerTwo;
+                resultsDisplay.textContent = `${playerTwo.playerName} wins yay`
+                playerTwo.increaseScore();
+            } else if(winner == 2){
+                resultsDisplay.textContent = "draw wop wop"
             }
+            document.body.appendChild(resultsDisplay);
+            
+            playAgain = document.createElement("button");
+            playAgain.textContent = "play again!!!!!"
+            document.body.appendChild(playAgain)
+            playAgain.addEventListener("click", () => {
+                grid = document.getElementById("grid");
+                document.body.removeChild(grid);
+                document.body.removeChild(playAgain);
+                document.body.removeChild(resultsDisplay);
+                gameboard.resetArray();
+                moveNum = 0;
+                renderGame();
+                winPlayer.increaseScore();
+            })
+            
+            
         }
+        
     }
-
-    renderGame();
-
+    getForm();
     return {};
 }
 
